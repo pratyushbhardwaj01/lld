@@ -22,12 +22,12 @@ public class GameService {
         this.board = board;
         this.playerList = playerList;
         this.currentPlayerIndex = currentPlayerIndex;
-        this.rank = -1;
+        this.rank = 0;
         this.consecutiveSixes = 0;
     }
 
     public boolean canPlay() {
-        return this.rank != playerList.size() - 1;
+        return this.rank != playerList.size();
     }
 
     public boolean canMove(Player player, int pos) {
@@ -64,26 +64,46 @@ public class GameService {
         }
     }
 
+    public int getNextDiceNumber() {
+        int consecutiveSixes = 0;
+        int totalCnt = 0;
+        while (true) {
+            int number = dice.rollDice();
+            totalCnt += number;
+            if (number == 6) {
+                consecutiveSixes++;
+            } else {
+                consecutiveSixes = 0;
+                break;
+            }
+            if (consecutiveSixes == 3) {
+                break;
+            }
+        }
+        return consecutiveSixes == 3 ? 0 : totalCnt;
+
+    }
 
     public void startGame() {
         while (canPlay()) {
-            int diceNumber = dice.rollDice();
+            int totalDiceNumber = getNextDiceNumber();
             Player currentPlayer = playerList.get(currentPlayerIndex);
-            System.out.printf("%s got %d on dice",currentPlayer.getName(), diceNumber);
+            System.out.printf("%s got %d on dice", currentPlayer.getName(), totalDiceNumber);
             System.out.println();
-
-            int currentPos = currentPlayer.getCurrentPos();
-            int nextPos = board.getUpdatePosition(currentPos + diceNumber);
-            if (canMove(currentPlayer, nextPos)) {
-                currentPlayer.updateCurrentPosition(nextPos);
-                if (board.isAtLastPos(nextPos)) {
+            int currentPosition = currentPlayer.getCurrentPos();
+            int updatedPosition = board.getUpdatePosition(currentPosition + totalDiceNumber);
+            if (canMove(currentPlayer, updatedPosition)) {
+                currentPlayer.updateCurrentPosition(updatedPosition);
+                if (board.isAtLastPos(updatedPosition)) {
                     currentPlayer.updateRank(this.rank + 1);
-                    this.rank = this.rank + 1;
+                    this.rank++;
                 }
+
             }
-            currentPlayerIndex = changeTurn(diceNumber);
+            currentPlayerIndex = (currentPlayerIndex + 1) % playerList.size();
             printCurrentGameStatus();
         }
         printRanks();
     }
+
 }
