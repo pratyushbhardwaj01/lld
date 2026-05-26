@@ -1,19 +1,21 @@
 package com.example.lld.template.splitwise.models;
 
-public class Split {
-    private final double amount;
-    private final User user;
+import java.math.BigDecimal;
 
-    public Split(double amount, User user) {
-        this.amount = amount;
+public class Split {
+    private final User user;
+    private final BigDecimal amount;
+
+    public Split(User user, BigDecimal amount) {
         this.user = user;
+        this.amount = amount;
     }
 
     public User getUser() {
         return user;
     }
 
-    public double getAmount() {
+    public BigDecimal getAmount() {
         return this.amount;
     }
 }

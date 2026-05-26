@@ -3,25 +3,25 @@ package com.example.lld.template.splitwise.models;
 import java.util.UUID;
 
 public class User {
-    private final String id;
+    private final String userId;
     private final String name;
     private final BalanceSheet balanceSheet;
 
     public User(String name) {
-        this.id = UUID.randomUUID().toString();
+        this.userId = UUID.randomUUID().toString();
         this.name = name;
         this.balanceSheet = new BalanceSheet(this);
-
     }
 
-    public String getName() {
+    public String getUserId() {
+        return this.userId;
+    }
+
+    public String getUserName() {
         return this.name;
-    }
-    public String getId() {
-        return this.id;
     }
 
     public BalanceSheet getBalanceSheet() {
-        return balanceSheet;
+        return this.balanceSheet;
     }
 }

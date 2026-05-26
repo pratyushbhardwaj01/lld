@@ -4,18 +4,18 @@ import java.util.List;
 import java.util.UUID;
 
 public class Group {
-    private final String id;
+    private final String groupId;
     private final String name;
     private final List<User> members;
 
     public Group(String name, List<User> members) {
-        this.members = members;
         this.name = name;
-        this.id = UUID.randomUUID().toString();
+        this.groupId = UUID.randomUUID().toString();
+        this.members = members;
     }
 
     public String getGroupId() {
-        return this.id;
+        return this.groupId;
     }
 
     public String getGroupName() {

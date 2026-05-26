@@ -1,51 +1,60 @@
 package com.example.lld.template.splitwise.models;
 
+import java.math.BigDecimal;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-
 public class BalanceSheet {
-    private final User owner;
-    private final Map<User, Double> balances = new ConcurrentHashMap<>();
+    private User owner;
+    private ConcurrentHashMap<String, ConcurrentHashMap<User, BigDecimal>> groupBalances;
+    private ConcurrentHashMap<User, BigDecimal> nonGroupBalances;
 
-    public BalanceSheet(User owner) {
-        this.owner = owner;
+    public BalanceSheet(User user) {
+        this.owner = user;
+        this.groupBalances = new ConcurrentHashMap<>();
+        this.nonGroupBalances = new ConcurrentHashMap<>();
     }
 
-    public Map<User, Double> getBalances() {
-        return this.balances;
+    public ConcurrentHashMap<String, ConcurrentHashMap<User, BigDecimal>> getGroupBalances() {
+        return this.groupBalances;
     }
 
-    public void updateBalance(User otherUser, double amount) {
-        if (owner.equals(otherUser)) {
+    public Map<User, BigDecimal> getNonGroupBalances() {
+        return this.nonGroupBalances;
+    }
+
+    public void settleNonGroupBalance(User user, BigDecimal amount) {
+        if (Objects.equals(user, owner)) {
             return;
         }
-        this.balances.merge(otherUser, amount, Double::sum);
+        this.nonGroupBalances.merge(user, amount, BigDecimal::add);
     }
 
-    public void showBalances() {
-        System.out.println("BalanceSheet for the User: " + this.owner.getName() + " ---------");
-        if (balances.isEmpty()) {
-            System.out.println("The User is already settled..");
-            return;
-        }
-        double totalOweToMe = 0;
-        double totalIOwe = 0;
-        for (Map.Entry<User, Double> balance : this.balances.entrySet()) {
-            User otherUser = balance.getKey();
-            double amount = balance.getValue();
-            if (amount < 0.01) {
-                System.out.println(this.owner.getName() + " owes " + otherUser.getName() + " $ " + String.format("%.2f", amount));
-                totalIOwe += (-amount);
-            }
-            if (amount > 0.01) {
-                System.out.println(otherUser.getName() + " Owes " + this.owner.getName() + " $ " + String.format("%.2f", amount));
-                totalOweToMe += amount;
-            }
+    public void settleGroupExpense(String groupId, User user, BigDecimal amount) {
+        this.groupBalances.computeIfAbsent(groupId, k -> new ConcurrentHashMap<>()).merge(user, amount, BigDecimal::add);
+    }
 
+    public void printBalance() {
+        System.out.println("Printing the balance for the user: " + owner.getUserName());
+        BigDecimal totalYouOwe = new BigDecimal(0);
+        BigDecimal totalOthersOweYou = new BigDecimal(0);
+        for (BigDecimal value : this.nonGroupBalances.values()) {
+            if (value.compareTo(BigDecimal.ZERO) > 0) {
+                totalOthersOweYou = totalOthersOweYou.add(value);
+            } else {
+                totalYouOwe = totalYouOwe.add(value.abs());
+            }
         }
-        System.out.println("Total Owed to " + owner.getName() + ": $" + String.format("%.2f", totalOweToMe));
-        System.out.println("Total " + owner.getName() + " Owes: $" + String.format("%.2f", totalIOwe));
-        System.out.println("---------------------------------");
+        for (Map<User, BigDecimal> entry : this.groupBalances.values()) {
+            for (BigDecimal amount : entry.values()) {
+                if (amount.compareTo(BigDecimal.ZERO) > 0) {
+                    totalYouOwe = totalYouOwe.add(amount);
+                } else {
+                    totalOthersOweYou = totalOthersOweYou.add(amount.abs());
+                }
+            }
+        }
+        System.out.println("Total amount you owe $: " + totalYouOwe + " and total amount others owe you $ " + totalOthersOweYou);
     }
 }

@@ -1,94 +1,83 @@
 package com.example.lld.template.splitwise.models;
 
-import com.example.lld.template.splitwise.definations.SplitStrategy;
+import com.example.lld.template.splitwise.definations.SplitFactory;
+import com.example.lld.template.splitwise.enums.SplitTypes;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 public class Expense {
-    private final double amount;
-    private final String description;
-    private final User paidBy;
-    private final List<Split> splits;
+    private final String expenseId;
     private final Instant createdAt;
-    private final Group group;
+    private final String groupId;
+    private final User paidBy;
+    private final BigDecimal amount;
+    private final List<Split> splits;
 
     private Expense(Builder builder) {
-        this.amount = builder.amount;
-        this.description = builder.description;
-        this.paidBy = builder.paidBy;
-        this.splits = builder.splitStrategy.createSplits(builder.amount, builder.participationAmounts, builder.participants);
+        this.expenseId = builder.expenseId;
         this.createdAt = builder.createdAt;
-        this.group = builder.group;
+        this.groupId = builder.groupId;
+        this.paidBy = builder.paidBy;
+        this.amount = builder.amount;
+        this.splits = new SplitFactory(builder.splitType).getSplits().createSplits(builder.amount, builder.contributors, builder.contributions);
     }
 
+
     public static class Builder {
-        private double amount;
-        private String description;
-        private User paidBy;
+        private String expenseId;
         private Instant createdAt;
-        private Group group;
-        private SplitStrategy splitStrategy;
-        private List<Double> participationAmounts;
-        private List<User> participants;
+        private String groupId;
+        private SplitTypes splitType;
+        private User paidBy;
+        private BigDecimal amount;
+        private List<User> contributors;
+        private List<BigDecimal> contributions;
 
-       public Builder setParticipants(List<User> participants) {
-            this.participants = participants;
+        public Builder() {
+            this.expenseId = UUID.randomUUID().toString();
+            this.createdAt = Instant.now();
+            this.groupId = UUID.randomUUID().toString();
+        }
+
+        public Builder setSplitType(SplitTypes splitType) {
+            this.splitType = splitType;
             return this;
         }
 
-       public Builder setStrategy(SplitStrategy splitStrategy) {
-            this.splitStrategy = splitStrategy;
+        public Builder setPaidBy(User user) {
+            this.paidBy = user;
             return this;
         }
 
-        public Builder setParticipationAmounts(List<Double> participationAmounts) {
-            this.participationAmounts = participationAmounts;
-            return this;
-        }
-
-        public Builder setAmount(double amount) {
+        public Builder setAmount(BigDecimal amount) {
             this.amount = amount;
             return this;
         }
 
-        public Builder setDescription(String desc) {
-            this.description = desc;
+        public Builder setContributors(List<User> userList) {
+            this.contributors = userList;
             return this;
         }
 
-        public Builder setPaidBy(User paidBy) {
-            this.paidBy = paidBy;
+        public Builder setContributions(List<BigDecimal> contributions) {
+            this.contributions = contributions;
             return this;
         }
 
-        public Builder setCreatedAt(Instant createdAt) {
-            this.createdAt = createdAt;
-            return this;
-        }
-
-        public Builder setGroup(Group group) {
-            this.group = group;
-            return this;
-        }
-
-        public Expense createExpense() {
+        public Expense build() {
             return new Expense(this);
         }
     }
 
-    public User getPaidBy() {
-        return paidBy;
-    }
-
-    public double getAmount() {
-        return amount;
-    }
-
     public List<Split> getSplits() {
-        return splits;
+        return this.splits;
     }
-    public String getDescription() {
-        return this.description;
+    public User getPaidBy() {
+        return this.paidBy;
     }
+
+
 }
